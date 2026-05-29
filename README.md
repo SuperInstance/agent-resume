@@ -1,133 +1,73 @@
-# agent-resume
+# agent-resume — Agent Capability Documentation
 
-Agent resume/CV generation — document AI agent capabilities, experience, and performance history.
+**Generate resumes/CVs for AI agents — document capabilities, experience, performance history, and proficiency levels.**
 
-Part of the [Cocapn fleet](https://github.com/Lucineer/the-fleet).
+## What This Gives You
 
-## Install
+- **Structured resumes** — document agent skills, experience, and performance in a standard format
+- **Proficiency levels** — rate skills as BEGINNER, INTERMEDIATE, ADVANCED, EXPERT, MASTER
+- **Experience tracking** — record projects, tasks completed, success rates, and durations
+- **Resume matching** — find the best agent for a task by matching requirements to resume capabilities
+- **Multi-format output** — generate resumes as markdown, JSON, or structured text
+
+## Quick Start
 
 ```bash
 pip install agent-resume
 ```
 
-For development:
-
-```bash
-pip install -e ".[dev]"
-```
-
-## Quick Start
-
 ```python
-from agent_resume import AgentResume, Skill, Experience, ResumeMatcher, ResumeFormatter
-from agent_resume.resume import Certification, Badge, PerformanceMetrics, PortfolioItem
-from agent_resume.skill import ProficiencyLevel
-from datetime import date
+from agent_resume import AgentResume, Skill, ProficiencyLevel, Experience, ResumeMatcher
 
 # Build a resume
-resume = AgentResume(
-    id="alpha",
-    name="Alpha Agent",
-    summary="High-performance automation and data processing agent.",
-    skills=[
-        Skill(name="Python", category="Language", proficiency=ProficiencyLevel.EXPERT),
-        Skill(name="API Design", category="Architecture", proficiency=ProficiencyLevel.ADVANCED),
-        Skill(name="Docker", category="DevOps", proficiency=ProficiencyLevel.INTERMEDIATE, tags=["containers"]),
-    ],
-    experience=[
-        Experience(
-            title="Customer Support Automation",
-            role="Primary Handler",
-            description="Reduced response time by 78% and handled 15k+ tickets",
-            outcome="98% customer satisfaction",
-            start_date=date(2023, 1, 1),
-        ),
-    ],
-    metrics=PerformanceMetrics(uptime_pct=99.8, tasks_completed=1247, accuracy_pct=96.5, avg_response_time_ms=145),
-    certifications=[Certification(name="Cloud Certified", issuer="ACME Corp")],
-    badges=[Badge(id="speed", name="Speed Demon", earned=date(2024, 5, 1))],
-)
-```
+resume = AgentResume(agent_id="agent-3", name="Fleet Builder")
+resume.add_skill(Skill(name="Rust", level=ProficiencyLevel.ADVANCED, years=2))
+resume.add_skill(Skill(name="Python", level=ProficiencyLevel.EXPERT, years=4))
+resume.add_experience(Experience(
+    project="cocapn-health-rs",
+    role="Lead Developer",
+    tasks_completed=47,
+    success_rate=0.94,
+))
 
-### Skill Endorsements
-
-```python
-skill = Skill(name="Data Analysis", proficiency=ProficiencyLevel.ADVANCED)
-skill.add_evidence("Processed 2.4TB of unstructured data")
-skill.endorse("Agent-Beta", "Excellent statistical analysis", weight=0.9)
-print(skill.combined_score)  # Blends proficiency + endorsements
-```
-
-### Matching Resumes to Requirements
-
-```python
+# Find the best agent for a task
 matcher = ResumeMatcher()
-matcher.add_requirement("Python", ProficiencyLevel.ADVANCED)
-matcher.add_requirement("API Design", ProficiencyLevel.INTERMEDIATE)
-matcher.add_requirement("Kubernetes", ProficiencyLevel.INTERMEDIATE)
+matcher.add_resume(resume)
+best = matcher.match(requirements=["Rust", "benchmarking"])
+print(f"Best fit: {best.agent_id} (score: {best.score:.2f})")
 
-result = matcher.match(resume)
-print(f"Score: {result.overall_score:.2f}")
-print(f"Qualified: {result.is_qualified}")
-print(f"Matched: {result.matched}")
-print(f"Missing: {result.missing}")
-
-# Rank multiple candidates
-ranked = matcher.rank([resume_a, resume_b, resume_c])
-for r, score in ranked:
-    print(f"{r.name}: {score.overall_score:.2f}")
-```
-
-### Formatting Output
-
-```python
-fmt = ResumeFormatter()
-
-# Plain text
-print(fmt.to_text(resume))
-
-# Markdown
-print(fmt.to_markdown(resume))
-
-# JSON
-print(fmt.to_json(resume, indent=2))
-```
-
-### Serialization
-
-```python
-# To dict / JSON
-data = resume.to_dict()
-json_str = ResumeFormatter().to_json(resume)
-
-# From dict (roundtrip)
-restored = AgentResume.from_dict(data)
+# Format output
+from agent_resume import ResumeFormatter
+formatter = ResumeFormatter()
+print(formatter.to_markdown(resume))
 ```
 
 ## API Reference
 
-### `AgentResume`
-Central data model: id, name, summary, skills, experience, metrics, certifications, portfolio, badges.
+### `AgentResume(agent_id, name)` — `add_skill()`, `add_experience()`, `summary()`
+### `Skill(name, level, years, evidence)` · `ProficiencyLevel` — BEGINNER → MASTER
+### `Experience(project, role, tasks_completed, success_rate, duration)`
+### `ResumeMatcher` — `add_resume()`, `match(requirements) → MatchResult`
+### `ResumeFormatter` — `to_markdown()`, `to_json()`, `to_text()`
 
-### `Skill`
-Name, category, proficiency level, evidence list, endorsements, tags. Computes `endorsement_score` and `combined_score`.
+## How It Fits
 
-### `Experience`
-Title, role, description, outcome, project, dates. Computes `duration`, `duration_days`, `is_ongoing`.
+The credentialing layer for the [SuperInstance fleet](https://github.com/SuperInstance). Works with [agent-tattoo](https://github.com/SuperInstance/agent-tattoo) — tattoos are the raw experience, resumes are the polished document.
 
-### `ResumeMatcher`
-Add requirements with minimum proficiency, then `match()` or `rank()` resumes. Supports exact, tag, and fuzzy matching.
+- **[agent-tattoo](https://github.com/SuperInstance/agent-tattoo)** — Behavioral markers (feed into resumes)
+- **[agent-generations](https://github.com/SuperInstance/agent-generations)** — Version tracking
+- **[captain](https://github.com/SuperInstance/captain)** — Uses matcher for task assignment
 
-### `ResumeFormatter`
-Output resumes as plain text, Markdown, or JSON.
-
-## Development
+## Testing
 
 ```bash
-pip install -e ".[dev]"
-pytest
+pytest tests/
 ```
 
-## License
+## Installation
 
-MIT
+```bash
+pip install agent-resume
+```
+
+Python 3.10+. MIT license.
